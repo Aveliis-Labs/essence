@@ -1,0 +1,21 @@
+{
+  "name": "essence",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Carte des prix des carburants en France (donnees publiques officielles)",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "compression": "^1.7.4",
+    "express": "^4.19.2",
+    "leaflet": "^1.9.4",
+    "node-cache": "^5.1.2"
+  }
+}

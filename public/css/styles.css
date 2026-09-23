@@ -1,0 +1,487 @@
+/* =========================================================================
+   Feuille de style unique, sans framework.
+   Approche mobile-first : les regles de base ciblent le telephone,
+   les media queries ajoutent le mode « split view » au-dela de 900 px.
+   ========================================================================= */
+
+:root {
+  --vert:        #0f7b4f;
+  --vert-clair:  #e6f4ee;
+  --ambre:       #b45309;
+  --rouge:       #b91c1c;
+
+  --fond:        #f6f7f9;
+  --surface:     #ffffff;
+  --surface-2:   #f1f3f6;
+  --bord:        #e2e5ea;
+  --texte:       #16191d;
+  --texte-doux:  #666e7a;
+
+  --ombre:       0 1px 2px rgba(16, 24, 40, .06), 0 4px 12px rgba(16, 24, 40, .06);
+  --rayon:       12px;
+  --bascule-h:   58px;    /* hauteur de la barre carte/liste */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --vert:       #34d399;
+    --vert-clair: #103328;
+    --ambre:      #fbbf24;
+    --rouge:      #f87171;
+
+    --fond:       #0d1013;
+    --surface:    #171b20;
+    --surface-2:  #1f242b;
+    --bord:       #2b323a;
+    --texte:      #eef1f5;
+    --texte-doux: #9aa4b1;
+    --ombre:      0 1px 2px rgba(0, 0, 0, .4), 0 4px 14px rgba(0, 0, 0, .35);
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--fond);
+  color: var(--texte);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+button { font: inherit; color: inherit; cursor: pointer; }
+svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------------------------------------------------------------- EN-TETE */
+
+.entete {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 12px 10px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--bord);
+}
+
+.entete__haut {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  white-space: nowrap;
+}
+.logo__accent { color: var(--vert); }
+
+/* --- Champ de recherche + autocompletion --- */
+
+.recherche {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.recherche__icone {
+  position: absolute;
+  left: 11px; top: 50%;
+  transform: translateY(-50%);
+  width: 17px; height: 17px;
+  color: var(--texte-doux);
+  pointer-events: none;
+}
+
+.recherche input {
+  width: 100%;
+  padding: 10px 34px 10px 35px;
+  border: 1px solid var(--bord);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--texte);
+  font-size: 16px;            /* >= 16px : evite le zoom auto sur iOS */
+  appearance: none;
+}
+.recherche input:focus {
+  outline: none;
+  border-color: var(--vert);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--vert) 18%, transparent);
+}
+.recherche input::-webkit-search-cancel-button { display: none; }
+
+.recherche__effacer {
+  position: absolute;
+  right: 6px; top: 50%;
+  transform: translateY(-50%);
+  width: 26px; height: 26px;
+  border: 0; border-radius: 50%;
+  background: transparent;
+  color: var(--texte-doux);
+  font-size: 20px; line-height: 1;
+}
+
+.suggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0; right: 0;
+  z-index: 1200;
+  max-height: 46vh;
+  margin: 0; padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--bord);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+}
+.suggestions li {
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.suggestions li:hover,
+.suggestions li[aria-selected="true"] { background: var(--surface-2); }
+.suggestions strong { display: block; font-weight: 600; }
+.suggestions small { color: var(--texte-doux); }
+
+/* --- Boutons --- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--bord);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(.97); }
+
+.btn--geoloc {
+  border-color: transparent;
+  background: var(--vert);
+  color: #fff;
+}
+.btn--geoloc svg { width: 18px; height: 18px; }
+.btn--geoloc .btn__texte { display: none; }   /* icone seule sur mobile */
+.btn--geoloc.is-charge { opacity: .6; pointer-events: none; }
+
+/* --- Barre d'outils : carburants + tri --- */
+
+.barre-outils {
+  display: flex;
+  flex-wrap: wrap;          /* mobile : le tri bascule sous les puces carburant */
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: 9px;
+}
+
+.puces {
+  display: flex;
+  flex: 1 1 100%;           /* toute la largeur : les 6 carburants restent accessibles */
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.puces::-webkit-scrollbar { display: none; }
+
+.puce {
+  padding: 6px 13px;
+  border: 1px solid var(--bord);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.puce.is-actif {
+  border-color: var(--vert);
+  background: var(--vert-clair);
+  color: var(--vert);
+}
+
+.tri {
+  display: flex;
+  flex: 0 0 auto;
+  margin-left: auto;        /* alignee a droite sur sa propre ligne (mobile) */
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.tri__btn {
+  padding: 5px 11px;
+  border: 0; border-radius: 999px;
+  background: transparent;
+  font-size: 13px; font-weight: 600;
+  color: var(--texte-doux);
+}
+.tri__btn.is-actif {
+  background: var(--surface);
+  color: var(--texte);
+  box-shadow: 0 1px 2px rgba(0,0,0,.12);
+}
+
+/* ------------------------------------------------------------- CONTENU */
+
+.contenu {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.carte, .panneau {
+  position: absolute;
+  inset: 0;
+}
+
+.carte { background: var(--surface-2); }
+
+.panneau {
+  display: flex;
+  flex-direction: column;
+  background: var(--fond);
+}
+
+/* Sur mobile, une seule vue est visible a la fois. */
+.contenu[data-vue="carte"] .panneau { display: none; }
+.contenu[data-vue="liste"] .carte   { visibility: hidden; }
+
+.panneau__entete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--bord);
+  background: var(--surface);
+}
+.resume { margin: 0; font-size: 13px; font-weight: 600; }
+.maj    { margin: 0; font-size: 11px; color: var(--texte-doux); white-space: nowrap; }
+
+.liste {
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 10px 10px calc(var(--bascule-h) + env(safe-area-inset-bottom, 0px) + 10px);
+  overflow-y: auto;
+  list-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* --- Carte station --- */
+
+.station {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  margin-bottom: 8px;
+  padding: 12px;
+  border: 1px solid var(--bord);
+  border-radius: var(--rayon);
+  background: var(--surface);
+  box-shadow: var(--ombre);
+  cursor: pointer;
+}
+.station.is-actif { border-color: var(--vert); box-shadow: 0 0 0 2px color-mix(in srgb, var(--vert) 25%, transparent); }
+
+.station__nom {
+  grid-column: 1;
+  margin: 0;
+  font-size: 15px; font-weight: 700;
+  line-height: 1.25;
+}
+.station__marque {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  color: var(--texte-doux);
+  font-size: 11px; font-weight: 600;
+  vertical-align: 1px;
+}
+
+.station__prix {
+  grid-column: 2; grid-row: 1 / span 2;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.station__prix b { display: block; font-size: 20px; line-height: 1.1; letter-spacing: -.02em; }
+.station__prix span { font-size: 11px; color: var(--texte-doux); }
+.station__prix.p-bas   b { color: var(--vert); }
+.station__prix.p-moyen b { color: var(--ambre); }
+.station__prix.p-haut  b { color: var(--rouge); }
+
+.station__adresse {
+  grid-column: 1;
+  margin: 0;
+  font-size: 13px; color: var(--texte-doux);
+}
+
+.station__meta {
+  grid-column: 1 / -1;
+  display: flex; flex-wrap: wrap; gap: 6px 10px;
+  margin-top: 2px;
+  font-size: 11.5px; color: var(--texte-doux);
+}
+.station__dist { font-weight: 700; color: var(--texte); }
+
+.station__actions {
+  grid-column: 1 / -1;
+  display: flex; gap: 8px;
+  margin-top: 8px;
+}
+.action {
+  flex: 1 1 0;
+  padding: 8px;
+  border: 1px solid var(--bord);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: inherit;
+  font-size: 12.5px; font-weight: 600;
+  text-align: center; text-decoration: none;
+}
+.action:hover { border-color: var(--vert); color: var(--vert); }
+
+.vide {
+  padding: 40px 20px;
+  color: var(--texte-doux);
+  text-align: center;
+}
+
+/* --- Marqueurs de prix sur la carte --- */
+
+.marqueur {
+  display: flex; align-items: center; justify-content: center;
+  min-width: 46px; height: 26px;
+  padding: 0 6px;
+  border: 1.5px solid #fff;
+  border-radius: 999px;
+  background: var(--texte-doux);
+  color: #fff;
+  font: 700 12px/1 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 6px rgba(0,0,0,.35);
+  white-space: nowrap;
+}
+.marqueur.p-bas   { background: #0f7b4f; }
+.marqueur.p-moyen { background: #b45309; }
+.marqueur.p-haut  { background: #b91c1c; }
+.marqueur.is-actif { transform: scale(1.18); z-index: 900 !important; }
+
+.marqueur-moi {
+  width: 16px; height: 16px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .3);
+}
+
+/* --- Popup Leaflet --- */
+
+.leaflet-popup-content-wrapper { border-radius: var(--rayon); }
+.leaflet-popup-content { margin: 12px 14px; min-width: 200px; }
+.popup__nom { margin: 0 0 2px; font-size: 14px; font-weight: 700; }
+.popup__adresse { margin: 0 0 8px; font-size: 12px; color: var(--texte-doux); }
+.popup__prix { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 0 0 10px; padding: 0; list-style: none; font-size: 12px; }
+.popup__prix li { font-variant-numeric: tabular-nums; }
+.popup__prix b { font-weight: 700; }
+.popup__actions { display: flex; gap: 6px; }
+.popup__actions .action { padding: 6px; font-size: 12px; }
+
+/* ------------------------------------------------- BASCULE CARTE / LISTE */
+
+.bascule {
+  position: sticky;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--surface);
+  border-top: 1px solid var(--bord);
+}
+.bascule__btn {
+  flex: 1 1 0;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  height: var(--bascule-h);
+  border: 0;
+  background: transparent;
+  color: var(--texte-doux);
+  font-size: 13px; font-weight: 600;
+}
+.bascule__btn.is-actif { color: var(--vert); }
+.bascule__compte {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--vert-clair);
+  color: var(--vert);
+  font-size: 11px;
+}
+
+/* ---------------------------------------------------------------- TOAST */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--bascule-h) + env(safe-area-inset-bottom, 0px) + 16px);
+  transform: translateX(-50%);
+  z-index: 2000;
+  max-width: calc(100vw - 32px);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #16191d;
+  color: #fff;
+  font-size: 13px; font-weight: 600;
+  box-shadow: var(--ombre);
+}
+
+[hidden] { display: none !important; }
+
+/* ====================================================== TABLETTE / DESKTOP */
+
+@media (min-width: 900px) {
+  :root { --bascule-h: 0px; }
+
+  .entete { padding: 12px 20px; }
+  .logo { font-size: 19px; }
+  .recherche { flex: 0 1 460px; }
+  .btn--geoloc .btn__texte { display: inline; }
+  .barre-outils { flex-wrap: nowrap; margin-top: 11px; }
+  .puces { flex: 0 1 auto; }
+  .tri { margin-left: 0; }
+
+  /* Vue scindee : carte a gauche, liste a droite. */
+  .carte   { right: 400px; }
+  .panneau { left: auto; width: 400px; border-left: 1px solid var(--bord); }
+
+  .contenu[data-vue="carte"] .panneau,
+  .contenu[data-vue="liste"] .panneau { display: flex; }
+  .contenu[data-vue="liste"] .carte   { visibility: visible; }
+
+  .liste { padding-bottom: 14px; }
+  .bascule { display: none; }
+  .toast { bottom: 24px; }
+  .station:hover { border-color: var(--vert); }
+}
+
+@media (min-width: 1400px) {
+  .carte   { right: 440px; }
+  .panneau { width: 440px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

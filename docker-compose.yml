@@ -1,0 +1,58 @@
+# =============================================================================
+# Lancement : docker compose up -d   ->   http://localhost:3000
+# =============================================================================
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: essence:latest
+    container_name: essence
+    restart: unless-stopped
+
+    ports:
+      - "${APP_PORT:-3000}:3000"
+
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      # Duree de vie du cache des prix cote serveur (secondes).
+      # Le flux officiel n'est mis a jour que quelques fois par jour :
+      # 1200 s (20 min) est un bon compromis fraicheur / charge amont.
+      PRICES_TTL_SECONDS: "1200"
+      # Referentiel des enseignes : tres stable, rafraichi une fois par jour.
+      BRANDS_TTL_SECONDS: "86400"
+      # Cache court des reponses /api/stations.
+      QUERY_TTL_SECONDS: "60"
+      # Bornes des requetes geographiques.
+      DEFAULT_RADIUS_KM: "15"
+      MAX_RADIUS_KM: "50"
+      MAX_RESULTS: "300"
+
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+
+    # L'application ne garde rien sur disque : tout le cache est en memoire.
+    # Le systeme de fichiers peut donc rester en lecture seule.
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+    # Garde-fous : l'app tourne confortablement en dessous de 256 Mo.
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

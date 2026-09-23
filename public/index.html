@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f7b4f">
+  <title>Prix des carburants en France — carte en temps réel</title>
+  <meta name="description" content="Trouvez la station-service la moins chère autour de vous. Prix officiels du Gazole, SP95, SP98, E10, E85 et GPL, mis à jour en continu.">
+
+  <!-- Preconnexion a l'API d'adresses (autocompletion) : gagne un aller-retour DNS/TLS -->
+  <link rel="preconnect" href="https://api-adresse.data.gouv.fr" crossorigin>
+  <link rel="preconnect" href="https://a.tile.openstreetmap.org" crossorigin>
+
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>⛽</text></svg>">
+</head>
+<body>
+
+<!-- ======================= EN-TETE ======================= -->
+<header class="entete">
+  <div class="entete__haut">
+    <h1 class="logo"><span aria-hidden="true">⛽</span> Prix <span class="logo__accent">carburants</span></h1>
+
+    <!-- Recherche d'adresse avec autocompletion (api-adresse.data.gouv.fr) -->
+    <div class="recherche" role="search">
+      <svg class="recherche__icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 21l-4.3-4.3M11 19a8 8 0 110-16 8 8 0 010 16z"/></svg>
+      <input
+        id="recherche"
+        type="search"
+        autocomplete="off"
+        role="combobox"
+        aria-expanded="false"
+        aria-controls="suggestions"
+        aria-label="Rechercher une adresse, une ville ou un code postal"
+        placeholder="Adresse, ville ou code postal…">
+      <button id="btn-effacer" class="recherche__effacer" type="button" aria-label="Effacer la recherche" hidden>&times;</button>
+      <ul id="suggestions" class="suggestions" role="listbox" aria-label="Suggestions d'adresses" hidden></ul>
+    </div>
+
+    <button id="btn-geoloc" class="btn btn--geoloc" type="button" title="Utiliser ma position">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/><circle cx="12" cy="12" r="5"/></svg>
+      <span class="btn__texte">Autour de moi</span>
+    </button>
+  </div>
+
+  <!-- Filtre carburant + tri -->
+  <div class="barre-outils">
+    <div id="filtres-carburant" class="puces" role="radiogroup" aria-label="Type de carburant"></div>
+
+    <div class="tri" role="radiogroup" aria-label="Trier les stations">
+      <button class="tri__btn is-actif" type="button" role="radio" aria-checked="true" data-tri="distance">Plus proche</button>
+      <button class="tri__btn" type="button" role="radio" aria-checked="false" data-tri="prix">Moins cher</button>
+    </div>
+  </div>
+</header>
+
+<!-- ======================= CONTENU ======================= -->
+<main class="contenu" data-vue="carte">
+  <div id="carte" class="carte" aria-label="Carte des stations-service"></div>
+
+  <aside class="panneau" aria-label="Liste des stations-service">
+    <div class="panneau__entete">
+      <p id="resume" class="resume">Choisissez un point de départ pour afficher les stations.</p>
+      <p id="maj" class="maj"></p>
+    </div>
+    <ol id="liste" class="liste"></ol>
+  </aside>
+</main>
+
+<!-- Bascule carte / liste (mobile uniquement) -->
+<nav class="bascule" aria-label="Affichage">
+  <button class="bascule__btn is-actif" type="button" data-vue="carte" aria-pressed="true">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3L3 6v15l6-3 6 3 6-3V3l-6 3-6-3zM9 3v15M15 6v15"/></svg> Carte
+  </button>
+  <button class="bascule__btn" type="button" data-vue="liste" aria-pressed="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+    Liste <span id="bascule-compte" class="bascule__compte"></span>
+  </button>
+</nav>
+
+<!-- Messages ponctuels (erreurs, chargement) -->
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="/vendor/leaflet/leaflet.js" defer></script>
+<script src="/js/app.js" defer></script>
+</body>
+</html>
