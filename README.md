@@ -7,12 +7,11 @@ sans compte ni base de données.
 ## Démarrage
 
 ```bash
+cp .env.example .env     # réglages, dont le port
 docker compose up -d
 ```
 
 → http://localhost:3000
-
-Autre port : `APP_PORT=8080 docker compose up -d`
 
 Sans Docker : `npm install && npm start`
 
@@ -33,7 +32,7 @@ Elle est entièrement automatique, à trois niveaux :
 
 | Quoi | Fréquence | Où |
 |---|---|---|
-| Le serveur retélécharge le flux officiel | 20 min | `PRICES_TTL_SECONDS` |
+| Le serveur retélécharge le flux officiel | 20 min | `PRICES_TTL_SECONDS` dans `.env` |
 | Un onglet laissé ouvert se remet à jour | 10 min | `RAFRAICHISSEMENT_MS` dans `public/js/app.js` |
 | Le référentiel des enseignes | 24 h | `BRANDS_TTL_SECONDS` |
 
@@ -46,7 +45,7 @@ Le rafraîchissement de l'onglet est mis en pause quand la page est en
 arrière-plan ou qu'une popup est ouverte, et reprend au retour sur l'onglet.
 
 Il n'y a donc **rien à planifier** : pas de cron, pas de tâche externe. Pour
-changer la cadence, modifiez `PRICES_TTL_SECONDS` dans `docker-compose.yml`.
+changer la cadence, modifiez `PRICES_TTL_SECONDS` dans `.env`.
 
 ## Sources
 
@@ -75,6 +74,7 @@ public/
   index.html
   css/styles.css
   js/app.js   Application cliente (JS natif)
+.env.example  Réglages à copier en .env
 ```
 
 Le navigateur ne reçoit jamais toute la France : soit un rayon de 15 km, soit
@@ -104,18 +104,35 @@ healthcheck Docker).
 
 ## Configuration
 
-Variables facultatives, dans `docker-compose.yml` :
+Tout se règle dans le fichier `.env`, à copier depuis `.env.example` :
+
+```bash
+cp .env.example .env
+```
+
+Pour changer le port, une seule ligne suffit :
+
+```ini
+APP_PORT=8080      # -> http://localhost:8080
+```
+
+Puis `docker compose up -d`.
 
 | Variable | Défaut | Rôle |
 |---|---|---|
-| `PORT` | 3000 | Port d'écoute |
+| `APP_PORT` | 3000 | Port publié sur la machine hôte — celui de l'URL |
+| `PORT` | 3000 | Port d'écoute de l'application elle-même |
 | `PRICES_TTL_SECONDS` | 1200 | Cache des prix |
 | `BRANDS_TTL_SECONDS` | 86400 | Cache du référentiel d'enseignes |
 | `QUERY_TTL_SECONDS` | 60 | Cache des réponses `/api/stations` |
+| `FETCH_TIMEOUT_MS` | 60000 | Délai max d'appel à une source |
 | `DEFAULT_RADIUS_KM` | 15 | Rayon par défaut |
 | `MAX_RADIUS_KM` | 50 | Rayon maximal |
 | `MAX_RESULTS` | 300 | Stations renvoyées au maximum |
-| `APP_PORT` | 3000 | Port publié sur l'hôte |
+
+`.env` n'est pas versionné. Il est lu par Docker Compose et, en lancement
+direct (`npm start`), par le serveur. Une variable déjà définie dans
+l'environnement l'emporte toujours sur le fichier.
 
 ## À savoir
 

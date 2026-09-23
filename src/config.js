@@ -1,10 +1,56 @@
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
+
 /**
  * Configuration centrale de l'application.
- * Toutes les valeurs sont surchargeables par variable d'environnement
- * (voir docker-compose.yml).
+ *
+ * Ordre de priorite, du plus fort au plus faible :
+ *   1. variables d'environnement reelles (docker-compose, shell, systemd...)
+ *   2. fichier .env a la racine du projet
+ *   3. valeurs par defaut ci-dessous
+ *
+ * Voir .env.example pour la liste commentee des variables.
  */
+
+/**
+ * Lecture minimale d'un fichier .env, sans dependance.
+ *
+ * Docker Compose lit deja .env de son cote pour substituer les variables du
+ * docker-compose.yml ; cette fonction sert au lancement direct (`npm start`).
+ * Une variable deja presente dans l'environnement n'est jamais ecrasee.
+ */
+function chargeFichierEnv() {
+  let contenu;
+  try {
+    contenu = fs.readFileSync(path.join(__dirname, '..', '.env'), 'utf8');
+  } catch {
+    return;   // pas de .env : on s'en tient aux valeurs par defaut
+  }
+
+  for (const ligne of contenu.split('\n')) {
+    const texte = ligne.trim();
+    if (!texte || texte.startsWith('#')) continue;
+
+    const separateur = texte.indexOf('=');
+    if (separateur < 1) continue;
+
+    const cle = texte.slice(0, separateur).trim();
+    if (process.env[cle] !== undefined) continue;   // l'environnement reel gagne
+
+    let valeur = texte.slice(separateur + 1).trim();
+    // Retire les guillemets eventuels autour de la valeur.
+    if (valeur.length > 1 &&
+        ((valeur.startsWith('"') && valeur.endsWith('"')) ||
+         (valeur.startsWith("'") && valeur.endsWith("'")))) {
+      valeur = valeur.slice(1, -1);
+    }
+    process.env[cle] = valeur;
+  }
+}
+
+chargeFichierEnv();
 
 const num = (value, fallback) => {
   const parsed = Number(value);

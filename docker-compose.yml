@@ -1,5 +1,9 @@
 # =============================================================================
 # Lancement : docker compose up -d   ->   http://localhost:3000
+#
+# Les reglages se font dans le fichier .env a cote de ce fichier :
+#     cp .env.example .env
+# Les valeurs apres « :- » ci-dessous sont les defauts si .env est absent.
 # =============================================================================
 
 services:
@@ -11,27 +15,23 @@ services:
     container_name: essence
     restart: unless-stopped
 
+    # "port sur la machine hote : port dans le conteneur"
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "${APP_PORT:-3000}:${PORT:-3000}"
 
     environment:
       NODE_ENV: production
-      PORT: "3000"
-      # Duree de vie du cache des prix cote serveur (secondes).
-      # Le flux officiel n'est mis a jour que quelques fois par jour :
-      # 1200 s (20 min) est un bon compromis fraicheur / charge amont.
-      PRICES_TTL_SECONDS: "1200"
-      # Referentiel des enseignes : tres stable, rafraichi une fois par jour.
-      BRANDS_TTL_SECONDS: "86400"
-      # Cache court des reponses /api/stations.
-      QUERY_TTL_SECONDS: "60"
-      # Bornes des requetes geographiques.
-      DEFAULT_RADIUS_KM: "15"
-      MAX_RADIUS_KM: "50"
-      MAX_RESULTS: "300"
+      PORT: "${PORT:-3000}"
+      PRICES_TTL_SECONDS: "${PRICES_TTL_SECONDS:-1200}"
+      BRANDS_TTL_SECONDS: "${BRANDS_TTL_SECONDS:-86400}"
+      QUERY_TTL_SECONDS: "${QUERY_TTL_SECONDS:-60}"
+      FETCH_TIMEOUT_MS: "${FETCH_TIMEOUT_MS:-60000}"
+      DEFAULT_RADIUS_KM: "${DEFAULT_RADIUS_KM:-15}"
+      MAX_RADIUS_KM: "${MAX_RADIUS_KM:-50}"
+      MAX_RESULTS: "${MAX_RESULTS:-300}"
 
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 5s
       start_period: 40s
