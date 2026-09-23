@@ -6,12 +6,24 @@ sans compte ni base de données.
 
 ## Démarrage
 
+### Derrière un reverse proxy (Dokploy / Traefik, Caddy, Nginx…)
+
 ```bash
-cp .env.example .env     # réglages, dont le port
+cp .env.example .env
 docker compose up -d
 ```
 
-→ http://localhost:3000
+Aucun port n'est publié sur la machine hôte : le proxy joint le conteneur par le
+réseau Docker, sur le **port 3000**. C'est ce qu'il faut indiquer au proxy
+(dans Dokploy : *Domains* → service `web`, port `3000`).
+
+### En local, sans proxy
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
+```
+
+→ http://localhost:3000 (port réglable avec `APP_PORT` dans `.env`)
 
 Sans Docker : `npm install && npm start`
 
@@ -74,7 +86,9 @@ public/
   index.html
   css/styles.css
   js/app.js   Application cliente (JS natif)
-.env.example  Réglages à copier en .env
+.env.example             Réglages à copier en .env
+docker-compose.yml       Déploiement derrière un reverse proxy
+docker-compose.local.yml Appoint : publie le port pour un test local
 ```
 
 Le navigateur ne reçoit jamais toute la France : soit un rayon de 15 km, soit
@@ -110,18 +124,10 @@ Tout se règle dans le fichier `.env`, à copier depuis `.env.example` :
 cp .env.example .env
 ```
 
-Pour changer le port, une seule ligne suffit :
-
-```ini
-APP_PORT=8080      # -> http://localhost:8080
-```
-
-Puis `docker compose up -d`.
-
 | Variable | Défaut | Rôle |
 |---|---|---|
-| `APP_PORT` | 3000 | Port publié sur la machine hôte — celui de l'URL |
-| `PORT` | 3000 | Port d'écoute de l'application elle-même |
+| `PORT` | 3000 | Port d'écoute de l'application — celui à donner au reverse proxy |
+| `APP_PORT` | 3000 | Port publié sur l'hôte, **uniquement** avec `docker-compose.local.yml` |
 | `PRICES_TTL_SECONDS` | 1200 | Cache des prix |
 | `BRANDS_TTL_SECONDS` | 86400 | Cache du référentiel d'enseignes |
 | `QUERY_TTL_SECONDS` | 60 | Cache des réponses `/api/stations` |
@@ -139,8 +145,8 @@ l'environnement l'emporte toujours sur le fichier.
 **La géolocalisation du navigateur exige HTTPS.** En `localhost` elle
 fonctionne, mais dès que l'application est exposée sur un nom de domaine il faut
 du TLS, sinon les navigateurs refusent la position et « Autour de moi » invite à
-saisir une adresse. Mettez un reverse proxy (Caddy, Traefik, Nginx) devant le
-conteneur ; le serveur est déjà configuré avec `trust proxy`.
+saisir une adresse. Le certificat géré par Traefik suffit ; le serveur est déjà
+configuré avec `trust proxy`.
 
 Les prix sont déclarés par les gérants : leur fraîcheur varie d'une station à
 l'autre. L'ancienneté de chaque relevé est affichée sur la fiche.

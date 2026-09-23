@@ -1,0 +1,13 @@
+# =============================================================================
+# Fichier d'appoint pour tester en local, sans reverse proxy.
+# Il publie le port sur la machine hote ; le fichier principal ne le fait pas.
+#
+#     docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
+#
+# Le port se regle avec APP_PORT dans .env (3000 par defaut).
+# =============================================================================
+
+services:
+  web:
+    ports:
+      - "${APP_PORT:-3000}:${PORT:-3000}"

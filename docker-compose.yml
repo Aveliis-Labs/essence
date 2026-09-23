@@ -1,5 +1,13 @@
 # =============================================================================
-# Lancement : docker compose up -d   ->   http://localhost:3000
+# Deploiement derriere un reverse proxy (Dokploy / Traefik, Caddy, Nginx...).
+#
+# Aucun port n'est publie sur la machine hote : le proxy joint le conteneur
+# directement par le reseau Docker, sur le port 3000. C'est ce qui evite le
+# « Bind for 0.0.0.0:3000 failed: port is already allocated » quand plusieurs
+# applications tournent sur le meme serveur.
+#
+# Pour un test en local, sans proxy, publiez le port avec le fichier d'appoint :
+#     docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
 #
 # Les reglages se font dans le fichier .env a cote de ce fichier :
 #     cp .env.example .env
@@ -12,12 +20,12 @@ services:
       context: .
       dockerfile: Dockerfile
     image: essence:latest
-    container_name: essence
     restart: unless-stopped
 
-    # "port sur la machine hote : port dans le conteneur"
-    ports:
-      - "${APP_PORT:-3000}:${PORT:-3000}"
+    # Port joignable depuis le reseau Docker uniquement : c'est celui a indiquer
+    # au reverse proxy (dans Dokploy : Domains -> service « web », port 3000).
+    expose:
+      - "${PORT:-3000}"
 
     environment:
       NODE_ENV: production
@@ -56,3 +64,22 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+    # --- Si votre proxy vit sur un reseau Docker externe -----------------------
+    # Dokploy renseigne generalement les labels Traefik et le reseau tout seul
+    # quand vous ajoutez un domaine depuis son interface. Si ce n'est pas le cas,
+    # decommentez les deux blocs ci-dessous et le bloc « networks » en fin de
+    # fichier, en remplacant le domaine.
+    #
+    # networks:
+    #   - dokploy-network
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.essence.rule=Host(`exemple.fr`)"
+    #   - "traefik.http.routers.essence.entrypoints=websecure"
+    #   - "traefik.http.routers.essence.tls.certresolver=letsencrypt"
+    #   - "traefik.http.services.essence.loadbalancer.server.port=3000"
+
+# networks:
+#   dokploy-network:
+#     external: true
