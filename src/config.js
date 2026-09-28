@@ -98,6 +98,9 @@ module.exports = {
     brandsTtl: num(process.env.BRANDS_TTL_SECONDS, 24 * 60 * 60),
     // Cache court des reponses HTTP /api/stations (secondes).
     queryTtl: num(process.env.QUERY_TTL_SECONDS, 60),
+    // Intervalle de re-interrogation par un navigateur laissant l'onglet ouvert
+    // (secondes). Transmis au front via /api/meta.
+    clientRefresh: num(process.env.CLIENT_REFRESH_SECONDS, 600),
     // Delai max d'une requete vers une source amont (ms).
     fetchTimeout: num(process.env.FETCH_TIMEOUT_MS, 60_000)
   },

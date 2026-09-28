@@ -16,7 +16,9 @@
   const CENTRE_FRANCE = { lat: 46.6, lon: 2.4, zoom: 6 };
   const RAYON_KM = 15;          // rayon par defaut d'une recherche « autour de moi »
   const MAX_STATIONS = 200;     // borne haute cote client
-  const RAFRAICHISSEMENT_MS = 10 * 60 * 1000;   // re-interrogation d'un onglet laisse ouvert
+  // Re-interrogation d'un onglet laisse ouvert. Valeur de repli : le serveur
+  // transmet la sienne (CLIENT_REFRESH_SECONDS) via /api/meta.
+  let RAFRAICHISSEMENT_MS = 10 * 60 * 1000;
 
   // Libelles par defaut, remplaces par /api/meta au chargement.
   let CARBURANTS = [
@@ -239,10 +241,18 @@
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
+      const donneesPlusRecentes = data.misAJourLe !== etat.majDonnees;
       etat.stations = data.stations || [];
       etat.majDonnees = data.misAJourLe;
       dernierChargement = Date.now();
       rend();
+
+      // Signale visuellement qu'un nouvel instantane vient d'arriver.
+      if (donneesPlusRecentes && silencieux) {
+        el.maj.classList.remove('is-nouveau');
+        void el.maj.offsetWidth;            // force le redemarrage de l'animation
+        el.maj.classList.add('is-nouveau');
+      }
     } catch (err) {
       if (err.name === 'AbortError') return;   // requete remplacee : normal
       console.error(err);
@@ -290,9 +300,32 @@
       ? `${n} station${n > 1 ? 's' : ''} • ${nomCarburant} • ${etat.tri === 'prix' ? 'moins cher d’abord' : 'plus proche d’abord'}`
       : 'Aucune station trouvée ici.';
     el.compte.textContent = n || '';
-    el.maj.textContent = etat.majDonnees
-      ? `Données du ${new Date(etat.majDonnees).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`
-      : '';
+    rendFraicheur();
+  }
+
+  /**
+   * Indicateur de fraicheur : age de l'instantane servi par le serveur.
+   * Le texte est relatif et se reactualise tout seul (voir demarreRafraichissement),
+   * la pastille passe a l'ambre puis au rouge si les donnees vieillissent.
+   */
+  function rendFraicheur() {
+    const texte = el.maj.querySelector('.maj__texte');
+    if (!etat.majDonnees) { texte.textContent = 'Chargement…'; return; }
+
+    const minutes = Math.floor((Date.now() - new Date(etat.majDonnees).getTime()) / 60_000);
+
+    let libelle;
+    if (minutes < 1)       libelle = "Données à l'instant";
+    else if (minutes < 60) libelle = `Données il y a ${minutes} min`;
+    else                   libelle = `Données il y a ${Math.floor(minutes / 60)} h`;
+
+    texte.textContent = libelle;
+    // Au-dela de 45 min le serveur aurait deja du rafraichir : signal visuel.
+    el.maj.classList.toggle('is-ancien', minutes >= 45 && minutes < 180);
+    el.maj.classList.toggle('is-perime', minutes >= 180);
+    el.maj.title =
+      `Prix relevés par le serveur le ${new Date(etat.majDonnees).toLocaleString('fr-FR')}\n` +
+      `Page réactualisée le ${new Date(dernierChargement).toLocaleTimeString('fr-FR')}`;
   }
 
   function rendListe() {
@@ -624,8 +657,9 @@
       Date.now() - dernierChargement >= RAFRAICHISSEMENT_MS;
 
     setInterval(() => {
+      rendFraicheur();                      // « il y a 3 min » -> « il y a 4 min »
       if (peutRafraichir()) charge({ mode: etat.mode, silencieux: true });
-    }, 60_000);
+    }, 30_000);
 
     // Retour sur l'onglet apres une longue absence : on remet a jour tout de suite.
     document.addEventListener('visibilitychange', () => {
@@ -643,6 +677,9 @@
       if (!res.ok) return;
       const meta = await res.json();
       if (Array.isArray(meta.carburants) && meta.carburants.length) CARBURANTS = meta.carburants;
+      if (Number.isFinite(meta.rafraichissementSecondes) && meta.rafraichissementSecondes > 0) {
+        RAFRAICHISSEMENT_MS = meta.rafraichissementSecondes * 1000;
+      }
     } catch { /* les libelles par defaut suffisent */ }
   }
 

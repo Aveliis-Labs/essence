@@ -48,6 +48,12 @@
   <div class="barre-outils">
     <div id="filtres-carburant" class="puces" role="radiogroup" aria-label="Type de carburant"></div>
 
+    <!-- Fraicheur des donnees : place ici (et non dans le panneau) pour rester
+         visible aussi bien en vue carte qu'en vue liste sur mobile. -->
+    <p id="maj" class="maj" aria-live="polite">
+      <span class="maj__point" aria-hidden="true"></span><span class="maj__texte">Chargement…</span>
+    </p>
+
     <div class="tri" role="radiogroup" aria-label="Trier les stations">
       <button class="tri__btn is-actif" type="button" role="radio" aria-checked="true" data-tri="distance">Plus proche</button>
       <button class="tri__btn" type="button" role="radio" aria-checked="false" data-tri="prix">Moins cher</button>
@@ -62,7 +68,6 @@
   <aside class="panneau" aria-label="Liste des stations-service">
     <div class="panneau__entete">
       <p id="resume" class="resume">Choisissez un point de départ pour afficher les stations.</p>
-      <p id="maj" class="maj"></p>
     </div>
     <ol id="liste" class="liste"></ol>
   </aside>

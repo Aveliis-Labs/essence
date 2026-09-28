@@ -47,7 +47,8 @@ router.get('/meta', (req, res) => {
   res.json({
     carburants: FUELS.map(({ code, label, fullLabel }) => ({ code, label, fullLabel })),
     rayonParDefautKm: config.limits.defaultRadiusKm,
-    rayonMaxKm: config.limits.maxRadiusKm
+    rayonMaxKm: config.limits.maxRadiusKm,
+    rafraichissementSecondes: config.cache.clientRefresh
   });
 });
 

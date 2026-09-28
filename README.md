@@ -42,10 +42,10 @@ Sans Docker : `npm install && npm start`
 
 Elle est entièrement automatique, à trois niveaux :
 
-| Quoi | Fréquence | Où |
+| Quoi | Fréquence | Réglage dans `.env` |
 |---|---|---|
-| Le serveur retélécharge le flux officiel | 20 min | `PRICES_TTL_SECONDS` dans `.env` |
-| Un onglet laissé ouvert se remet à jour | 10 min | `RAFRAICHISSEMENT_MS` dans `public/js/app.js` |
+| Le serveur retélécharge le flux officiel | 20 min | `PRICES_TTL_SECONDS` |
+| Un onglet laissé ouvert se remet à jour | 10 min | `CLIENT_REFRESH_SECONDS` |
 | Le référentiel des enseignes | 24 h | `BRANDS_TTL_SECONDS` |
 
 Le serveur garde tout en mémoire et recharge en tâche de fond 30 s avant
@@ -56,8 +56,32 @@ valides continuent d'être servies.
 Le rafraîchissement de l'onglet est mis en pause quand la page est en
 arrière-plan ou qu'une popup est ouverte, et reprend au retour sur l'onglet.
 
-Il n'y a donc **rien à planifier** : pas de cron, pas de tâche externe. Pour
-changer la cadence, modifiez `PRICES_TTL_SECONDS` dans `.env`.
+Il n'y a donc **rien à planifier** : pas de cron, pas de tâche externe.
+
+### Vérifier que ça marche
+
+**Depuis le site.** Une pastille et un texte en haut à droite de la barre de
+filtres indiquent l'âge des données : *« ● Données il y a 4 min »*. Le texte se
+met à jour tout seul, et la pastille passe à l'ambre puis au rouge si les
+données cessent d'être rafraîchies. Survolez-la pour voir l'heure exacte du
+dernier relevé serveur et de la dernière réactualisation de la page.
+
+**Depuis l'API.** `GET /api/health` donne l'âge en secondes :
+
+```bash
+curl https://votre-domaine/api/health
+{"statut":"ok","stations":9137,"misAJourLe":"2026-09-28T10:08:38.244Z","ageSecondes":42}
+```
+
+Si `ageSecondes` reste bien en dessous de `PRICES_TTL_SECONDS`, la boucle
+tourne.
+
+**Depuis les logs.** Chaque rechargement écrit une ligne :
+
+```bash
+docker compose logs --tail 20 | grep "stations chargees"
+[store] 9137 stations chargees en 442 ms (9970 enseignes connues)
+```
 
 ## Sources
 
@@ -131,6 +155,7 @@ cp .env.example .env
 | `PRICES_TTL_SECONDS` | 1200 | Cache des prix |
 | `BRANDS_TTL_SECONDS` | 86400 | Cache du référentiel d'enseignes |
 | `QUERY_TTL_SECONDS` | 60 | Cache des réponses `/api/stations` |
+| `CLIENT_REFRESH_SECONDS` | 600 | Intervalle de réactualisation d'un onglet ouvert |
 | `FETCH_TIMEOUT_MS` | 60000 | Délai max d'appel à une source |
 | `DEFAULT_RADIUS_KM` | 15 | Rayon par défaut |
 | `MAX_RADIUS_KM` | 50 | Rayon maximal |

@@ -214,6 +214,36 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   color: var(--vert);
 }
 
+/* Indicateur de fraicheur des donnees */
+.maj {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--texte-doux);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.maj__point {
+  flex: none;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--vert);          /* vert = donnees recentes */
+}
+.maj.is-ancien .maj__point { background: var(--ambre); }
+.maj.is-perime .maj__point { background: var(--rouge); }
+
+/* Bref clignotement quand un rafraichissement vient d'aboutir. */
+.maj.is-nouveau .maj__point { animation: pulsation 1.6s ease-out 2; }
+@keyframes pulsation {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--vert) 70%, transparent); }
+  100% { box-shadow: 0 0 0 7px transparent; }
+}
+
 .tri {
   display: flex;
   flex: 0 0 auto;
@@ -270,7 +300,6 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   background: var(--surface);
 }
 .resume { margin: 0; font-size: 13px; font-weight: 600; }
-.maj    { margin: 0; font-size: 11px; color: var(--texte-doux); white-space: nowrap; }
 
 .liste {
   flex: 1 1 auto;
@@ -461,6 +490,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   .btn--geoloc .btn__texte { display: inline; }
   .barre-outils { flex-wrap: nowrap; margin-top: 11px; }
   .puces { flex: 0 1 auto; }
+  .maj { margin-left: auto; }   /* repoussee a droite, le tri la suit */
   .tri { margin-left: 0; }
 
   /* Vue scindee : carte a gauche, liste a droite. */
